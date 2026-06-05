@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>eDrive Charge Station Simulator</title>
+  <style>
+    /* ========== CSS VARIABLES & THEME ========== */
+    :root {
+      --bg-dark: #0a1428;
+      --bg-card: #0f1f35;
+      --bg-card-hover: #162840;
+      --cyan: #00d4ff;
+      --green: #00ff88;
+      --orange: #ff8800;
+      --yellow: #ffdd00;
+      --red: #ff3333;
+      --text: #e8f4fd;
+      --text-muted: #6b8fa8;
+      --border: rgba(0, 212, 255, 0.3);
+      --glow-cyan: 0 0 20px rgba(0, 212, 255, 0.4);
+      --glow-green: 0 0 20px rgba(0, 255, 136, 0.4);
+      --glow-orange: 0 0 20px rgba(255, 136, 0, 0.4);
+    }
+
+    /* ========== GLOBAL STYLES ========== */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ========== HEADER ========== */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1.5rem;
+      border-bottom: 2px solid var(--cyan);
+      background: linear-gradient(90deg, #061020 0%, #0a1428 50%, #061020 100%);
+      box-shadow: var(--glow-cyan);
+      flex-shrink: 0;
+    }
+
+    .header-title {
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: var(--cyan);
+      letter-spacing: 3px;
+      text-shadow: 0 0 30px rgba(0,212,255,0.8);
+    }
+
+    .header-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+      margin-top: 2px;
+    }
+
+    .reset-btn {
+      padding: 0.6rem 1.25rem;
+      background: linear-gradient(135deg, #cc0000, #ff3333);
+      color: white;
+      border: 2px solid var(--red);
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+      transition: all 0.3s ease;
+      box-shadow: 0 0 15px rgba(255,51,51,0.3);
+    }
+
+    .reset-btn:hover {
+      background: linear-gradient(135deg, #ff0000, #ff5555);
+      box-shadow: 0 0 30px rgba(255,51,51,0.6);
+      transform: scale(1.05);
+    }
+
+    /* ========== MAIN CONTAINER ========== */
+    .main-container {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    /* ========== LEFT SIDEBAR ========== */
+    .sidebar {
+      width: 170px;
+      flex-shrink: 0;
+      background: linear-gradient(180deg, #0c1a2e 0%, #0a1428 100%);
+      border-right: 1px solid rgba(0,212,255,0.2);
+      padding: 1rem 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      overflow-y: auto;
+    }
+
+    .sidebar-label {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+      padding: 0.5rem 1rem 0.25rem;
+      text-transform: uppercase;
+    }
+
+    .tab-btn {
+      padding: 0.9rem 1rem;
+      background: none;
+      border: none;
+      border-left: 3px solid transparent;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.25s ease;
+      width: 100%;
+    }
+
+    .tab-btn:hover {
+      color: var(--cyan);
+      background: rgba(0,212,255,0.07);
+      border-left-color: rgba(0,212,255,0.4);
+    }
+
+    .tab-btn.active {
+      color: var(--cyan);
+      border-left-color: var(--cyan);
+      background: rgba(0,212,255,0.12);
+      text-shadow: 0 0 10px rgba(0,212,255,0.5);
+    }
+
+    /* ========== CONTENT AREA ========== */
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    .tab-pane {
+      display: none;
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem 1.25rem;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .tab-pane.active { display: flex; }
+
+    /* ========== PLACEHOLDER PANES ========== */
+    .placeholder-pane {
+      align-items: center;
+      justify-content: center;
+    }
+
+    .placeholder-card {
+      background: linear-gradient(135deg, var(--bg-card), #0d2040);
+      border: 2px solid rgba(0,212,255,0.3);
+      border-radius: 16px;
+      padding: 3.5rem 2.5rem;
+      text-align: center;
+      max-width: 420px;
+      box-shadow: var(--glow-cyan), inset 0 0 40px rgba(0,212,255,0.05);
+    }
+
+    .placeholder-icon { font-size: 3.5rem; margin-bottom: 1rem; }
+    .placeholder-card h2 { color: var(--cyan); margin-bottom: 0.75rem; font-size: 1.4rem; letter-spacing: 1px; }
+    .placeholder-card p { color: var(--text-muted); line-height: 1.7; font-size: 0.95rem; }
+    .placeholder-future {
+      margin-top: 1.25rem;
+      display: inline-block;
+      background: rgba(0,212,255,0.1);
+      border: 1px solid rgba(0,212,255,0.3);
+      border-radius: 20px;
+      padding: 0.4rem 1rem;
+      font-size: 0.75rem;
+      color: var(--cyan);
+      letter-spacing: 1px;
+    }
+
+    /* ========== DASHBOARD PANE ========== */
+    .dashboard-pane { padding: 1rem 1.25rem; }
+
+    /* Station section */
+    .station-section {
+      background: linear-gradient(180deg, #0c2030 0%, #0a1828 100%);
+      border: 1px solid rgba(0,212,255,0.25);
+      border-radius: 10px;
+      padding: 1rem;
+      flex-shrink: 0;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .section-title {
+      color: var(--cyan);
+      font-size: 0.85rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-shadow: 0 0 15px rgba(0,212,255,0.5);
+    }
+
+    .section-badge {
+      background: rgba(0,212,255,0.15);
+      border: 1px solid rgba(0,212,255,0.3);
+      color: var(--cyan);
+      padding: 0.2rem 0.6rem;
+      border-radius: 10px;
+      font-size: 0.7rem;
+      letter-spacing: 1px;
+    }
+
+    /* Bay grid */
+    .bays-container {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+    }
+
+    .bay-card {
+      background: linear-gradient(135deg, #0c2035, #0a1828);
+      border: 1.5px solid var(--green);
+      border-radius: 8px;
+      padding: 0.75rem;
+      min-height: 130px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bay-card.vacant { border-color: rgba(0,255,136,0.4); }
+    .bay-card.vacant:hover { border-color: var(--green); box-shadow: var(--glow-green); }
+
+    .bay-card.entering {
+      border-color: var(--yellow);
+      box-shadow: 0 0 15px rgba(255,221,0,0.3);
+    }
+
+    .bay-card.charging {
+      border-color: var(--cyan);
+      box-shadow: var(--glow-cyan);
+      animation: pulse-bay 1.8s ease-in-out infinite;
+    }
+
+    .bay-card.exiting {
+      border-color: var(--orange);
+      box-shadow: var(--glow-orange);
+    }
+
+    @keyframes pulse-bay {
+      0%, 100% { box-shadow: 0 0 15px rgba(0,212,255,0.3); }
+      50% { box-shadow: 0 0 40px rgba(0,212,255,0.7), inset 0 0 20px rgba(0,212,255,0.1); }
+    }
+
+    .bay-header { display: flex; justify-content: space-between; align-items: center; }
+
+    .bay-number {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    .bay-status {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 8px;
+      font-size: 0.65rem;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .bay-status.vacant { background: rgba(0,255,136,0.15); color: var(--green); }
+    .bay-status.entering { background: rgba(255,221,0,0.15); color: var(--yellow); }
+    .bay-status.charging { background: rgba(0,212,255,0.15); color: var(--cyan); }
+    .bay-status.exiting { background: rgba(255,136,0,0.15); color: var(--orange); }
+
+    .bay-emoji { font-size: 1.8rem; text-align: center; padding: 0.25rem 0; min-height: 2.5rem; }
+
+    .bay-stats { display: flex; flex-direction: column; gap: 0.3rem; }
+
+    .battery-info { font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between; }
+
+    .battery-bar-container {
+      background: rgba(0,0,0,0.4);
+      border-radius: 3px;
+      height: 6px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .battery-bar {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.3s ease, background-color 0.3s ease;
+      width: 0%;
+    }
+
+    .battery-bar.low { background: linear-gradient(90deg, #cc0000, var(--red)); }
+    .battery-bar.medium { background: linear-gradient(90deg, #cc6600, var(--orange)); }
+    .battery-bar.high { background: linear-gradient(90deg, #00cc66, var(--green)); }
+
+    .time-remaining { font-size: 0.7rem; color: var(--cyan); text-align: right; }
+
+    /* Roadway section */
+    .roadway-section {
+      flex-shrink: 0;
+      background: linear-gradient(180deg, #091520, #0a1828);
+      border: 1px solid rgba(0,212,255,0.2);
+      border-radius: 10px;
+      padding: 0.75rem;
+    }
+
+    .roadway-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    #roadway-canvas {
+      display: block;
+      width: 100%;
+      height: 165px;
+      border: 1.5px solid rgba(0,212,255,0.3);
+      border-radius: 6px;
+      cursor: default;
+    }
+
+    #roadway-canvas:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--cyan), 0 0 25px rgba(0,212,255,0.4);
+    }
+
+    /* Metrics panel */
+    .metrics-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      flex-shrink: 0;
+    }
+
+    .metric-card {
+      background: linear-gradient(135deg, var(--bg-card), #0d2040);
+      border: 1.5px solid rgba(0,212,255,0.3);
+      border-radius: 10px;
+      padding: 1rem;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .metric-card:hover {
+      border-color: var(--cyan);
+      box-shadow: var(--glow-cyan);
+      transform: translateY(-2px);
+    }
+
+    .metric-icon { font-size: 1.5rem; margin-bottom: 0.25rem; }
+    .metric-label { font-size: 0.7rem; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 0.25rem; }
+    .metric-value { font-size: 1.6rem; font-weight: bold; color: var(--cyan); font-family: 'Courier New', monospace; }
+    .metric-unit { font-size: 0.65rem; color: var(--text-muted); }
+
+    /* ========== RIGHT QUEUE PANEL ========== */
+    .queue-panel {
+      width: 260px;
+      flex-shrink: 0;
+      background: linear-gradient(180deg, #0a1e10, #0a1428);
+      border-left: 2px solid rgba(0,255,136,0.3);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      overflow-y: auto;
+    }
+
+    .queue-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .queue-title {
+      color: var(--green);
+      font-size: 0.8rem;
+      font-weight: bold;
+      letter-spacing: 2px;
+      text-shadow: var(--glow-green);
+    }
+
+    .queue-badge {
+      background: rgba(0,255,136,0.2);
+      color: var(--green);
+      padding: 0.2rem 0.6rem;
+      border-radius: 10px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      min-width: 1.8rem;
+      text-align: center;
+    }
+
+    .queue-items-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      flex: 1;
+    }
+
+    .queue-item {
+      background: rgba(0,255,136,0.07);
+      border: 1px solid rgba(0,255,136,0.3);
+      border-radius: 8px;
+      padding: 0.75rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      animation: slideIn 0.3s ease;
+      transition: all 0.2s ease;
+    }
+
+    .queue-item:hover {
+      background: rgba(0,255,136,0.12);
+      border-color: var(--green);
+      box-shadow: 0 0 12px rgba(0,255,136,0.2);
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .queue-emoji { font-size: 1.6rem; flex-shrink: 0; }
+
+    .queue-info { flex: 1; }
+    .queue-vid { font-weight: bold; color: var(--cyan); font-size: 0.8rem; }
+    .queue-pos { font-size: 0.7rem; color: var(--text-muted); margin-top: 0.1rem; }
+
+    .queue-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      color: var(--text-muted);
+      padding: 2rem 1rem;
+      text-align: center;
+      font-size: 0.85rem;
+      flex: 1;
+    }
+
+    .queue-empty-icon { font-size: 2rem; }
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 1100px) {
+      .bays-container { grid-template-columns: repeat(3, 1fr); }
+      .queue-panel { width: 220px; }
+    }
+
+    @media (max-width: 900px) {
+      .queue-panel { display: none; }
+      .bays-container { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 600px) {
+      .sidebar { width: 55px; }
+      .tab-btn { padding: 0.8rem 0.3rem; font-size: 0.65rem; }
+      .bays-container { grid-template-columns: repeat(2, 1fr); }
+      .metrics-container { grid-template-columns: 1fr; }
+      #roadway-canvas { height: 120px; }
+    }
+
+    /* ========== SCROLLBAR ========== */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(0,212,255,0.05); }
+    ::-webkit-scrollbar-thumb { background: rgba(0,212,255,0.3); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(0,212,255,0.5); }
+  </style>
+</head>
+
+<body>
+  <!-- ========== HEADER ========== -->
+  <header>
+    <div>
+      <div class="header-title">⚡ eDRIVE CHARGE STATION</div>
+      <div class="header-sub">EV FLEET MANAGEMENT SIMULATOR</div>
+    </div>
+    <button class="reset-btn" id="reset-btn">⟳ RESET SIMULATION</button>
+  </header>
+
+  <!-- ========== MAIN CONTAINER ========== -->
+  <div class="main-container">
+
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-label">Navigation</div>
+      <button class="tab-btn active" data-tab="dashboard">📊 Dashboard</button>
+      <button class="tab-btn" data-tab="cars">🚗 Cars</button>
+      <button class="tab-btn" data-tab="stations">⛽ Stations</button>
+      <button class="tab-btn" data-tab="simulation">⚙️ Simulation</button>
+      <button class="tab-btn" data-tab="settings">⚡ Settings</button>
+    </aside>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- === DASHBOARD === -->
+      <div id="pane-dashboard" class="tab-pane dashboard-pane active">
+
+        <!-- Charging Station Scene -->
+        <div class="station-section">
+          <div class="section-header">
+            <div class="section-title">⚡ eDrive Station</div>
+            <div class="section-badge" id="bays-active-badge">8 BAYS ACTIVE</div>
+          </div>
+          <div class="bays-container" id="bays-grid"></div>
+        </div>
+
+        <!-- Three-Lane Roadway -->
+        <div class="roadway-section">
+          <div class="roadway-label">🛣️ eDrive Highway — Click a car to charge</div>
+          <canvas id="roadway-canvas" tabindex="0"
+            role="application"
+            aria-label="EV Charging Station Roadway — click a moving car to send it to a charging bay"></canvas>
+        </div>
+
+        <!-- Metrics -->
+        <div class="metrics-container">
+          <div class="metric-card">
+            <div class="metric-icon">⚡</div>
+            <div class="metric-label">Total Energy Dispensed</div>
+            <div class="metric-value" id="metric-kwh">0.00</div>
+            <div class="metric-unit">kWh</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-icon">🔋</div>
+            <div class="metric-label">Active Sessions</div>
+            <div class="metric-value" id="metric-active">0</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-icon">✅</div>
+            <div class="metric-label">Completed Sessions</div>
+            <div class="metric-value" id="metric-completed">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- === CARS PLACEHOLDER === -->
+      <div id="pane-cars" class="tab-pane placeholder-pane">
+        <div class="placeholder-card">
+          <div class="placeholder-icon">🚗</div>
+          <h2>Cars Management</h2>
+          <p>Configure vehicle fleet profiles, battery capacities, and spawn behavior rules for the simulation.</p>
+          <div class="placeholder-future">📅 PLANNED FOR FUTURE STAGE</div>
+        </div>
+      </div>
+
+      <!-- === STATIONS PLACEHOLDER === -->
+      <div id="pane-stations" class="tab-pane placeholder-pane">
+        <div class="placeholder-card">
+          <div class="placeholder-icon">⛽</div>
+          <h2>Station Configuration</h2>
+          <p>Add, remove, and configure charging bays, power levels, and station layout.</p>
+          <div class="placeholder-future">📅 PLANNED FOR FUTURE STAGE</div>
+        </div>
+      </div>
+
+      <!-- === SIMULATION PLACEHOLDER === -->
+      <div id="pane-simulation" class="tab-pane placeholder-pane">
+        <div class="placeholder-card">
+          <div class="placeholder-icon">⚙️</div>
+          <h2>Simulation Controls</h2>
+          <p>Control simulation speed, car spawn rate, charging power, and queue behavior settings.</p>
+          <div class="placeholder-future">📅 PLANNED FOR FUTURE STAGE</div>
+        </div>
+      </div>
+
+      <!-- === SETTINGS PLACEHOLDER === -->
+      <div id="pane-settings" class="tab-pane placeholder-pane">
+        <div class="placeholder-card">
+          <div class="placeholder-icon">⚡</div>
+          <h2>Settings</h2>
+          <p>Theme customization, display preferences, and accessibility options.</p>
+          <div class="placeholder-future">📅 PLANNED FOR FUTURE STAGE</div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+
+    <!-- RIGHT QUEUE PANEL -->
+    <aside class="queue-panel">
+      <div class="queue-header">
+        <div class="queue-title">⏳ CHARGE QUEUE</div>
+        <div class="queue-badge" id="queue-badge">0</div>
+      </div>
+      <div class="queue-items-list" id="queue-list"></div>
+    </aside>
+
+  </div><!-- /main-container -->
+
+  <script>
+    // =====================================================
+    // SIMULATION CONFIGURATION
+    // =====================================================
+    const CONFIG = {
+      CAR_SPAWN_INTERVAL_MS: 2200,
+      BAY_COUNT: 4,
+      CHARGING_POWER_KW: 90,
+      BATTERY_START_RANGE: [20, 75],
+      BATTERY_TARGET_RANGE: [80, 95],
+      CAPACITY_KWH: 60,
+      CHARGE_DURATION_MIN_S: 5,
+      CHARGE_DURATION_MAX_S: 45,
+      MAX_QUEUE_SIZE: 20,
+      ENTER_EXIT_DURATION_MS: 2200,
+      CLICK_DEBOUNCE_MS: 300,
+      CAR_SPEED_PX_PER_S: 55,
+      LANE_COUNT: 3,
+    };
+
+    const STATES = {
+      ROADWAY: 'ROADWAY',
+      QUEUED: 'QUEUED',
+      ENTERING: 'ENTERING',
+      CHARGING: 'CHARGING',
+      EXITING: 'EXITING'
+    };
+
+    const CAR_STYLES = [
+      { emoji: '🚗', label: 'Sedan' },
+      { emoji: '🚕', label: 'Taxi' },
+      { emoji: '🚙', label: 'SUV' },
+      { emoji: '🏎️', label: 'Sport' },
+    ];
+
+    // =====================================================
+    // GLOBAL SIMULATION STATE
+    // =====================================================
+    let sim = {
+      vehicles: [],
+      slots: [],
+      queue: [],
+      metrics: { totalKWh: 0, completed: 0, active: 0 },
+      lastSpawnTime: 0,
+      nextVehicleId: 1,
+      animationId: null,
+      dashOffset: 0,
+      hoveredVehicle: null,
+    };
+
+    // =====================================================
+    // CANVAS SETUP
+    // =====================================================
+    const canvas = document.getElementById('roadway-canvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      canvas.width = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+    }
+
+    // =====================================================
+    // HELPERS
+    // =====================================================
+    function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+    function getLaneY(laneIndex) {
+      const laneH = canvas.height / CONFIG.LANE_COUNT;
+      return (laneIndex + 0.5) * laneH;
+    }
+
+    function getLaneDirection(laneIndex) {
+      // Lane 0: L→R, Lane 1: R→L, Lane 2: L→R
+      return laneIndex === 1 ? 'left' : 'right';
+    }
+
+    // =====================================================
+    // VEHICLE FACTORY
+    // =====================================================
+    function createVehicle() {
+      const laneIndex = rand(0, CONFIG.LANE_COUNT - 1);
+      const direction = getLaneDirection(laneIndex);
+      const startX = direction === 'right' ? -60 : canvas.width + 60;
+      const batteryStart = rand(CONFIG.BATTERY_START_RANGE[0], CONFIG.BATTERY_START_RANGE[1]);
+      const batteryTarget = rand(CONFIG.BATTERY_TARGET_RANGE[0], CONFIG.BATTERY_TARGET_RANGE[1]);
+
+      return {
+        id: sim.nextVehicleId++,
+        laneIndex,
+        xPos: startX,
+        yPos: getLaneY(laneIndex),
+        direction,
+        state: STATES.ROADWAY,
+        assignedBayId: null,
+        batteryStart,
+        batteryCurrent: batteryStart,
+        batteryTarget,
+        capacityKWh: CONFIG.CAPACITY_KWH,
+        style: CAR_STYLES[rand(0, CAR_STYLES.length - 1)],
+        transition: null,
+        lastClickTime: 0,
+      };
+    }
+
+    // =====================================================
+    // SLOT MANAGEMENT
+    // =====================================================
+    function initSlots() {
+      sim.slots = [];
+      for (let i = 1; i <= CONFIG.BAY_COUNT; i++) {
+        sim.slots.push({
+          id: i,
+          vehicleId: null,
+          powerKw: CONFIG.CHARGING_POWER_KW,
+          sessionStart: null,
+          sessionEnd: null,
+          energyKWh: 0,
+        });
+      }
+    }
+
+    function findFreeSlot() {
+      return sim.slots.find(s => s.vehicleId === null) || null;
+    }
+
+    // =====================================================
+    // SPAWN
+    // =====================================================
+    function spawnCars(now) {
+      if (now - sim.lastSpawnTime >= CONFIG.CAR_SPAWN_INTERVAL_MS) {
+        sim.vehicles.push(createVehicle());
+        sim.lastSpawnTime = now;
+      }
+    }
+
+    // =====================================================
+    // QUEUE MANAGEMENT
+    // =====================================================
+    function processQueue() {
+      if (sim.queue.length === 0) return;
+      const slot = findFreeSlot();
+      if (!slot) return;
+
+      const vid = sim.queue.shift();
+      const v = sim.vehicles.find(v => v.id === vid);
+
+      if (v && v.state === STATES.QUEUED) {
+        assignToSlot(v, slot);
+        renderQueueDOM();
+      } else if (sim.queue.length > 0) {
+        processQueue(); // skip orphaned entry
+      }
+    }
+
+    // =====================================================
+    // CHARGE REQUEST & ASSIGNMENT
+    // =====================================================
+    function requestCharge(vehicle) {
+      if (vehicle.state !== STATES.ROADWAY) return;
+      const now = performance.now();
+      if (now - vehicle.lastClickTime < CONFIG.CLICK_DEBOUNCE_MS) return;
+      vehicle.lastClickTime = now;
+
+      const slot = findFreeSlot();
+      if (slot) {
+        assignToSlot(vehicle, slot);
+      } else if (sim.queue.length < CONFIG.MAX_QUEUE_SIZE) {
+        vehicle.state = STATES.QUEUED;
+        sim.queue.push(vehicle.id);
+        renderQueueDOM();
+      }
+    }
+
+    function assignToSlot(vehicle, slot) {
+      slot.vehicleId = vehicle.id;
+      vehicle.assignedBayId = slot.id;
+      vehicle.state = STATES.ENTERING;
+
+      // CANVAS-LOCAL coordinate transform (Zoe's bug fix)
+      const bayEl = document.getElementById(`bay-${slot.id}`);
+      if (!bayEl) return;
+      const bayRect = bayEl.getBoundingClientRect();
+      const canvasRect = canvas.getBoundingClientRect();
+
+      vehicle.transition = {
+        fromX: vehicle.xPos,
+        fromY: vehicle.yPos,
+        toX: (bayRect.left + bayRect.width / 2) - canvasRect.left,
+        toY: (bayRect.top + bayRect.height / 2) - canvasRect.top,
+        startTime: performance.now(),
+        duration: CONFIG.ENTER_EXIT_DURATION_MS,
+      };
+    }
+
+    // =====================================================
+    // CHARGING
+    // =====================================================
+    function startCharging(vehicle) {
+      vehicle.state = STATES.CHARGING;
+      const slot = sim.slots[vehicle.assignedBayId - 1];
+
+      // Charge time scales with how much battery is still needed when the car enters the bay.
+      const chargeNeededPct = Math.max(0, 100 - vehicle.batteryCurrent);
+      const durationS = Math.max(
+        CONFIG.CHARGE_DURATION_MIN_S,
+        Math.min(CONFIG.CHARGE_DURATION_MAX_S, (chargeNeededPct / 100) * CONFIG.CHARGE_DURATION_MAX_S)
+      );
+
+      slot.sessionStart = performance.now();
+      slot.sessionEnd = slot.sessionStart + durationS * 1000;
+      slot.energyKWh = (chargeNeededPct / 100) * vehicle.capacityKWh;
+      sim.metrics.active++;
+    }
+
+    function updateCharging(now) {
+      for (const v of sim.vehicles) {
+        if (v.state !== STATES.CHARGING) continue;
+        const slot = sim.slots[v.assignedBayId - 1];
+        if (!slot || slot.sessionStart === null) continue;
+        const progress = Math.min(1, (now - slot.sessionStart) / (slot.sessionEnd - slot.sessionStart));
+        v.batteryCurrent = v.batteryStart + (v.batteryTarget - v.batteryStart) * progress;
+        if (progress >= 1) completeCharging(v, slot);
+      }
+    }
+
+    function completeCharging(vehicle, slot) {
+      vehicle.batteryCurrent = vehicle.batteryTarget;
+      vehicle.state = STATES.EXITING;
+
+      const laneY = getLaneY(vehicle.laneIndex);
+      const exitX = vehicle.direction === 'right' ? canvas.width + 80 : -80;
+
+      vehicle.transition = {
+        fromX: vehicle.xPos,
+        fromY: vehicle.yPos,
+        toX: exitX,
+        toY: laneY,
+        startTime: performance.now(),
+        duration: CONFIG.ENTER_EXIT_DURATION_MS,
+      };
+
+      sim.metrics.totalKWh += slot.energyKWh;
+      sim.metrics.completed++;
+      sim.metrics.active--;
+
+      slot.vehicleId = null;
+      slot.sessionStart = null;
+      slot.sessionEnd = null;
+      slot.energyKWh = 0;
+
+      processQueue();
+    }
+
+    // =====================================================
+    // POSITION UPDATES (DELTA-TIME BASED — Zoe's bug fix)
+    // =====================================================
+    function updatePositions(dt) {
+      sim.vehicles = sim.vehicles.filter(v => {
+        if (v.state === STATES.ROADWAY) {
+          const dx = CONFIG.CAR_SPEED_PX_PER_S * dt;
+          v.xPos += v.direction === 'right' ? dx : -dx;
+          // Remove off-screen cars
+          return v.xPos <= canvas.width + 70 && v.xPos >= -70;
+        }
+
+        if (v.state === STATES.ENTERING || v.state === STATES.EXITING) {
+          if (!v.transition) return true;
+          const elapsed = performance.now() - v.transition.startTime;
+          const t = Math.min(1, elapsed / v.transition.duration);
+          // Ease-in-out quad
+          const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+          v.xPos = v.transition.fromX + (v.transition.toX - v.transition.fromX) * ease;
+          v.yPos = v.transition.fromY + (v.transition.toY - v.transition.fromY) * ease;
+
+          if (t >= 1) {
+            if (v.state === STATES.ENTERING) {
+              startCharging(v);
+            } else if (v.state === STATES.EXITING) {
+              v.state = STATES.ROADWAY;
+              v.xPos = v.direction === 'right' ? -60 : canvas.width + 60;
+              v.yPos = getLaneY(v.laneIndex);
+              v.transition = null;
+              processQueue();
+            }
+          }
+        }
+        return true;
+      });
+    }
+
+    // =====================================================
+    // CANVAS RENDERING
+    // =====================================================
+    function renderCanvas(dt) {
+      const w = canvas.width;
+      const h = canvas.height;
+      const laneH = h / CONFIG.LANE_COUNT;
+
+      // Background — tarmac
+      ctx.fillStyle = '#0e1e2c';
+      ctx.fillRect(0, 0, w, h);
+
+      // Lane background shading (alternating subtle bands)
+      for (let i = 0; i < CONFIG.LANE_COUNT; i++) {
+        ctx.fillStyle = i % 2 === 0 ? 'rgba(0,30,50,0.3)' : 'rgba(0,20,40,0.2)';
+        ctx.fillRect(0, i * laneH, w, laneH);
+      }
+
+      // Road edges
+      ctx.strokeStyle = 'rgba(0,255,136,0.8)';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(0, 1); ctx.lineTo(w, 1); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, h - 1); ctx.lineTo(w, h - 1); ctx.stroke();
+
+      // Animated lane dividers
+      sim.dashOffset = (sim.dashOffset + 40 * dt) % 80;
+      ctx.lineWidth = 2;
+
+      for (let i = 1; i < CONFIG.LANE_COUNT; i++) {
+        const y = i * laneH;
+        // Lane 0→1 divider scrolls right, Lane 1→2 divider scrolls left
+        const dir = i === 1 ? -1 : 1;
+        ctx.strokeStyle = i === 1 ? 'rgba(0,212,255,0.6)' : 'rgba(0,212,255,0.4)';
+        ctx.setLineDash([25, 15]);
+        ctx.lineDashOffset = dir * sim.dashOffset;
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+      }
+      ctx.setLineDash([]);
+
+      // Lane direction arrows (subtle)
+      ctx.fillStyle = 'rgba(0,212,255,0.12)';
+      ctx.font = '14px Arial';
+      ctx.textBaseline = 'middle';
+      for (let i = 0; i < CONFIG.LANE_COUNT; i++) {
+        const dir = getLaneDirection(i);
+        const arrow = dir === 'right' ? '▶' : '◀';
+        const laneY = (i + 0.5) * laneH;
+        for (let x = 80; x < w; x += 160) {
+          ctx.textAlign = 'center';
+          ctx.fillText(arrow, x, laneY);
+        }
+      }
+
+      // Render vehicles
+      for (const v of sim.vehicles) {
+        if (v.state !== STATES.ROADWAY && v.state !== STATES.ENTERING && v.state !== STATES.EXITING) continue;
+
+        const x = v.xPos;
+        const y = v.yPos;
+
+        // Hover glow
+        if (v === sim.hoveredVehicle && v.state === STATES.ROADWAY) {
+          const grad = ctx.createRadialGradient(x, y, 5, x, y, 38);
+          grad.addColorStop(0, 'rgba(0,212,255,0.3)');
+          grad.addColorStop(1, 'rgba(0,212,255,0)');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(x, y, 38, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.strokeStyle = 'rgba(0,212,255,0.7)';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(x, y, 32, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        // Car emoji (flipped based on direction)
+        ctx.font = '26px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        if (v.direction === 'right') {
+          ctx.save();
+          ctx.translate(x, y - 3);
+          ctx.scale(-1, 1);
+          ctx.fillText(v.style.emoji, 0, 0);
+          ctx.restore();
+        } else {
+          ctx.fillText(v.style.emoji, x, y - 3);
+        }
+
+        // Battery bar
+        const bw = 32, bh = 5;
+        const bx = x - bw / 2, by = y + 17;
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
+        ctx.fillRect(bx, by, bw, bh);
+
+        const pct = v.batteryCurrent / 100;
+        ctx.fillStyle = pct > 0.7 ? '#00ff88' : pct > 0.3 ? '#ff8800' : '#ff3333';
+        ctx.fillRect(bx, by, bw * pct, bh);
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+        ctx.lineWidth = 0.5;
+        ctx.strokeRect(bx, by, bw, bh);
+      }
+    }
+
+    // =====================================================
+    // DOM UPDATES
+    // =====================================================
+    function renderBayDOM() {
+      for (let i = 1; i <= CONFIG.BAY_COUNT; i++) {
+        const bayEl = document.getElementById(`bay-${i}`);
+        if (!bayEl) continue;
+        const slot = sim.slots[i - 1];
+        const vehicle = slot.vehicleId ? sim.vehicles.find(v => v.id === slot.vehicleId) : null;
+
+        let cls = 'vacant', statusTxt = 'VACANT', emoji = '', battPct = 0, timeStr = '';
+
+        if (vehicle) {
+          emoji = vehicle.style.emoji;
+          battPct = Math.round(vehicle.batteryCurrent);
+          if (vehicle.state === STATES.ENTERING) { cls = 'entering'; statusTxt = 'ENTERING'; }
+          else if (vehicle.state === STATES.CHARGING) {
+            cls = 'charging'; statusTxt = 'CHARGING';
+            const rem = Math.max(0, (slot.sessionEnd - performance.now()) / 1000);
+            timeStr = `${Math.ceil(rem)}s`;
+          }
+          else if (vehicle.state === STATES.EXITING) { cls = 'exiting'; statusTxt = 'EXITING'; }
+          else { cls = 'entering'; statusTxt = 'CONNECTING'; }
+        }
+
+        bayEl.className = `bay-card ${cls}`;
+        bayEl.setAttribute('aria-label', `Bay ${i}: ${statusTxt}`);
+
+        const statusEl = bayEl.querySelector('.bay-status');
+        if (statusEl) { statusEl.textContent = statusTxt; statusEl.className = `bay-status ${cls}`; }
+
+        const emojiEl = bayEl.querySelector('.bay-emoji');
+        if (emojiEl) emojiEl.textContent = emoji;
+
+        const barEl = bayEl.querySelector('.battery-bar');
+        if (barEl) {
+          barEl.style.width = (vehicle ? battPct : 0) + '%';
+          barEl.className = 'battery-bar';
+          if (vehicle) {
+            if (battPct < 30) barEl.classList.add('low');
+            else if (battPct < 70) barEl.classList.add('medium');
+            else barEl.classList.add('high');
+          }
+        }
+
+        const infoEl = bayEl.querySelector('.battery-info');
+        if (infoEl) infoEl.textContent = vehicle ? `🔋 ${battPct}%  •  ${slot.powerKw}kW` : '';
+
+        const timeEl = bayEl.querySelector('.time-remaining');
+        if (timeEl) timeEl.textContent = timeStr;
+      }
+
+      // Active bays count
+      const activeBays = sim.slots.filter(s => s.vehicleId !== null).length;
+      const badge = document.getElementById('bays-active-badge');
+      if (badge) badge.textContent = `${activeBays}/${CONFIG.BAY_COUNT} ACTIVE`;
+    }
+
+    function renderMetricsDOM() {
+      const kwh = document.getElementById('metric-kwh');
+      const act = document.getElementById('metric-active');
+      const comp = document.getElementById('metric-completed');
+      if (kwh) kwh.textContent = sim.metrics.totalKWh.toFixed(2);
+      if (act) act.textContent = sim.metrics.active;
+      if (comp) comp.textContent = sim.metrics.completed;
+    }
+
+    function renderQueueDOM() {
+      const list = document.getElementById('queue-list');
+      const badge = document.getElementById('queue-badge');
+      if (!list) return;
+
+      if (badge) badge.textContent = sim.queue.length;
+
+      list.innerHTML = '';
+
+      if (sim.queue.length === 0) {
+        list.innerHTML = `<div class="queue-empty"><div class="queue-empty-icon">✓</div><div>All bays available</div></div>`;
+        return;
+      }
+
+      sim.queue.forEach((vehicleId, idx) => {
+        const v = sim.vehicles.find(v => v.id === vehicleId);
+        if (!v) return;
+        const item = document.createElement('div');
+        item.className = 'queue-item';
+        item.setAttribute('title', `Vehicle #${vehicleId} — click to prioritize`);
+        item.innerHTML = `
+          <div class="queue-emoji">${v.style.emoji}</div>
+          <div class="queue-info">
+            <div class="queue-vid">Vehicle #${vehicleId}</div>
+            <div class="queue-pos">Queue position: ${idx + 1}</div>
+          </div>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    // =====================================================
+    // MAIN LOOP
+    // =====================================================
+    let lastFrameTime = performance.now();
+
+    function loop(now) {
+      const dt = Math.min((now - lastFrameTime) / 1000, 0.1); // cap at 100ms to avoid jumps
+      lastFrameTime = now;
+
+      spawnCars(now);
+      updatePositions(dt);
+      updateCharging(now);
+      renderCanvas(dt);
+      renderBayDOM();
+      renderMetricsDOM();
+
+      sim.animationId = requestAnimationFrame(loop);
+    }
+
+    // =====================================================
+    // RESET
+    // =====================================================
+    function resetSim() {
+      if (sim.animationId) cancelAnimationFrame(sim.animationId);
+
+      sim.vehicles = [];
+      sim.slots.forEach(s => {
+        s.vehicleId = null; s.sessionStart = null; s.sessionEnd = null; s.energyKWh = 0;
+      });
+      sim.queue = [];
+      sim.metrics = { totalKWh: 0, completed: 0, active: 0 };
+      sim.lastSpawnTime = performance.now();
+      sim.nextVehicleId = 1;
+      sim.dashOffset = 0;
+
+      renderBayDOM();
+      renderQueueDOM();
+      renderMetricsDOM();
+
+      lastFrameTime = performance.now();
+      sim.animationId = requestAnimationFrame(loop);
+    }
+
+    // =====================================================
+    // TAB SWITCHING
+    // =====================================================
+    function switchTab(name) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      document.querySelector(`[data-tab="${name}"]`).classList.add('active');
+      document.getElementById(`pane-${name}`).classList.add('active');
+      if (name === 'dashboard') {
+        setTimeout(resizeCanvas, 30);
+      }
+    }
+
+    // =====================================================
+    // CANVAS INTERACTION
+    // =====================================================
+    function getCanvasPos(e) {
+      const r = canvas.getBoundingClientRect();
+      return { x: e.clientX - r.left, y: e.clientY - r.top };
+    }
+
+    function vehicleAt(x, y) {
+      for (const v of sim.vehicles) {
+        if (v.state !== STATES.ROADWAY) continue;
+        if (Math.hypot(v.xPos - x, v.yPos - y) < 35) return v;
+      }
+      return null;
+    }
+
+    // Keyboard: charge nearest roadway car to canvas center
+    function handleKeydown(e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      const cx = canvas.width / 2, cy = canvas.height / 2;
+      const nearest = sim.vehicles
+        .filter(v => v.state === STATES.ROADWAY)
+        .sort((a, b) => Math.hypot(a.xPos - cx, a.yPos - cy) - Math.hypot(b.xPos - cx, b.yPos - cy))[0];
+      if (nearest) requestCharge(nearest);
+    }
+
+    // =====================================================
+    // GENERATE BAY CARDS
+    // =====================================================
+    function generateBayCards() {
+      const grid = document.getElementById('bays-grid');
+      for (let i = 1; i <= CONFIG.BAY_COUNT; i++) {
+        const card = document.createElement('div');
+        card.id = `bay-${i}`;
+        card.className = 'bay-card vacant';
+        card.setAttribute('role', 'status');
+        card.setAttribute('aria-label', `Bay ${i}: VACANT`);
+        card.innerHTML = `
+          <div class="bay-header">
+            <div class="bay-number">BAY #${i}</div>
+            <div class="bay-status vacant">VACANT</div>
+          </div>
+          <div class="bay-emoji"></div>
+          <div class="bay-stats">
+            <div class="battery-info"></div>
+            <div class="battery-bar-container"><div class="battery-bar"></div></div>
+            <div class="time-remaining"></div>
+          </div>
+        `;
+        grid.appendChild(card);
+      }
+    }
+
+    // =====================================================
+    // INIT
+    // =====================================================
+    document.addEventListener('DOMContentLoaded', () => {
+      generateBayCards();
+      resizeCanvas();
+      initSlots();
+
+      // Canvas events
+      canvas.addEventListener('click', e => {
+        const { x, y } = getCanvasPos(e);
+        const v = vehicleAt(x, y);
+        if (v) requestCharge(v);
+      });
+
+      canvas.addEventListener('mousemove', e => {
+        const { x, y } = getCanvasPos(e);
+        sim.hoveredVehicle = vehicleAt(x, y);
+        canvas.style.cursor = sim.hoveredVehicle ? 'pointer' : 'default';
+      });
+
+      canvas.addEventListener('mouseleave', () => {
+        sim.hoveredVehicle = null;
+        canvas.style.cursor = 'default';
+      });
+
+      canvas.addEventListener('keydown', handleKeydown);
+
+      // Tab buttons
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+      });
+
+      // Reset button
+      document.getElementById('reset-btn').addEventListener('click', resetSim);
+
+      // Window resize
+      window.addEventListener('resize', () => {
+        resizeCanvas();
+      });
+
+      // Start simulation
+      sim.lastSpawnTime = performance.now();
+      lastFrameTime = performance.now();
+      sim.animationId = requestAnimationFrame(loop);
+    });
+  </script>
+</body>
+</html>
